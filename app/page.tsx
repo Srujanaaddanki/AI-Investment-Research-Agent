@@ -16,17 +16,14 @@ export default function Home() {
   ]);
 
   const handleAnalyze = async (
-  company: string,
-  exchange: string
-) => {
+    company: string,
+    exchange: string
+  ) => {
 
-  alert("handleAnalyze reached");
+    console.log(company);
+    console.log(exchange);
 
-  console.log(company);
-  console.log(exchange);
-
-
-    const newStatus = [
+    const status = [
       "Waiting",
       "Waiting",
       "Waiting",
@@ -34,17 +31,18 @@ export default function Home() {
       "Waiting",
     ];
 
-    for (let i = 0; i < newStatus.length; i++) {
-      newStatus[i] = "Running...";
-      setAgentStatus([...newStatus]);
+    for (let i = 0; i < status.length; i++) {
 
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1000)
-      );
+      status[i] = "Running...";
+      setAgentStatus([...status]);
 
-      newStatus[i] = "Completed";
-      setAgentStatus([...newStatus]);
+      await new Promise(resolve => setTimeout(resolve, 1200));
+
+      status[i] = "Completed";
+      setAgentStatus([...status]);
+
     }
+
   };
 
   return (

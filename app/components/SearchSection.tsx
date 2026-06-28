@@ -13,72 +13,67 @@ export default function SearchSection({
   const [company, setCompany] = useState("");
   const [exchange, setExchange] = useState("NSE");
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!company.trim()) {
+      alert("Please enter a company.");
+      return;
+    }
+
+    onAnalyze(company.trim(), exchange);
+  };
+
   return (
-    <section className="max-w-4xl mx-auto px-6 py-10">
+    <section className="max-w-4xl mx-auto py-10 px-6">
 
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl p-8 shadow-xl">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-slate-900 rounded-2xl border border-slate-700 p-8"
+      >
 
-        <h3 className="text-2xl font-bold mb-2">
+        <h2 className="text-2xl font-bold mb-2">
           Search Company
-        </h3>
+        </h2>
 
         <p className="text-slate-400 mb-8">
-          Enter any listed company to begin AI-powered investment analysis.
+          Enter a company to begin AI analysis.
         </p>
 
-        <div className="space-y-6">
+        <label className="block mb-2">
+          Company Name
+        </label>
 
-          <div>
+        <input
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+          className="w-full rounded-lg bg-slate-800 p-4 mb-6"
+          placeholder="Tesla"
+        />
 
-            <label className="block mb-2 text-sm text-slate-300">
-              Company Name
-            </label>
+        <label className="block mb-2">
+          Stock Exchange
+        </label>
 
-            <input
-              type="text"
-              value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              placeholder="Apple, Tesla, Infosys..."
-              className="w-full p-4 rounded-xl bg-slate-800 border border-slate-700"
-            />
+        <select
+          value={exchange}
+          onChange={(e) => setExchange(e.target.value)}
+          className="w-full rounded-lg bg-slate-800 p-4 mb-8"
+        >
+          <option>NSE</option>
+          <option>BSE</option>
+          <option>NASDAQ</option>
+          <option>NYSE</option>
+        </select>
 
-          </div>
+        <button
+          type="submit"
+          className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 py-4 text-xl font-bold"
+        >
+          Analyze Company
+        </button>
 
-          <div>
-
-            <label className="block mb-2 text-sm text-slate-300">
-              Stock Exchange
-            </label>
-
-            <select
-              value={exchange}
-              onChange={(e) => setExchange(e.target.value)}
-              className="w-full p-4 rounded-xl bg-slate-800 border border-slate-700"
-            >
-              <option value="NSE">NSE</option>
-              <option value="BSE">BSE</option>
-              <option value="NASDAQ">NASDAQ</option>
-              <option value="NYSE">NYSE</option>
-            </select>
-
-          </div>
-
-
-          <button
-  onClick={() => {
-    alert("Button clicked");
-    onAnalyze(company, exchange);
-  }}
-  disabled={company.trim() === ""}
-  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed transition rounded-xl py-4 font-semibold text-lg"
->
-  Analyze Company
-</button>
-
-
-        </div>
-
-      </div>
+      </form>
 
     </section>
   );
