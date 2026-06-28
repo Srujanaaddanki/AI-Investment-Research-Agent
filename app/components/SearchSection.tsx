@@ -38,8 +38,8 @@ export default function SearchSection({
               type="text"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
-              placeholder="Example: Apple, Tesla, Infosys..."
-              className="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:border-blue-500"
+              placeholder="Apple, Tesla, Infosys..."
+              className="w-full p-4 rounded-xl bg-slate-800 border border-slate-700"
             />
 
           </div>
@@ -53,7 +53,7 @@ export default function SearchSection({
             <select
               value={exchange}
               onChange={(e) => setExchange(e.target.value)}
-              className="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:border-blue-500"
+              className="w-full p-4 rounded-xl bg-slate-800 border border-slate-700"
             >
               <option value="NSE">NSE</option>
               <option value="BSE">BSE</option>
@@ -63,13 +63,18 @@ export default function SearchSection({
 
           </div>
 
+
           <button
-            onClick={() => onAnalyze(company.trim(), exchange)}
-            disabled={company.trim() === ""}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed transition rounded-xl py-4 font-semibold text-lg"
-          >
-            Analyze Company
-          </button>
+  onClick={() => {
+    alert("Button clicked");
+    onAnalyze(company, exchange);
+  }}
+  disabled={company.trim() === ""}
+  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed transition rounded-xl py-4 font-semibold text-lg"
+>
+  Analyze Company
+</button>
+
 
         </div>
 

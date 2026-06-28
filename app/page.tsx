@@ -7,16 +7,44 @@ import SearchSection from "./components/SearchSection";
 import AgentCard from "./components/AgentCard";
 
 export default function Home() {
+  const [agentStatus, setAgentStatus] = useState([
+    "Waiting",
+    "Waiting",
+    "Waiting",
+    "Waiting",
+    "Waiting",
+  ]);
 
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const handleAnalyze = async (
+  company: string,
+  exchange: string
+) => {
 
-  const handleAnalyze = (company: string, exchange: string) => {
+  alert("handleAnalyze reached");
 
-    console.log("Company:", company);
-    console.log("Exchange:", exchange);
+  console.log(company);
+  console.log(exchange);
 
-    setIsAnalyzing(true);
 
+    const newStatus = [
+      "Waiting",
+      "Waiting",
+      "Waiting",
+      "Waiting",
+      "Waiting",
+    ];
+
+    for (let i = 0; i < newStatus.length; i++) {
+      newStatus[i] = "Running...";
+      setAgentStatus([...newStatus]);
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1000)
+      );
+
+      newStatus[i] = "Completed";
+      setAgentStatus([...newStatus]);
+    }
   };
 
   return (
@@ -32,8 +60,6 @@ export default function Home() {
 
         <p className="mt-5 text-slate-400 max-w-2xl">
           Analyze any listed company using multiple AI agents.
-          Get financial insights, latest news,
-          risk assessment, and intelligent investment suggestions.
         </p>
 
       </section>
@@ -51,31 +77,31 @@ export default function Home() {
           <AgentCard
             title="Research Agent"
             description="Collects company overview and market information."
-            status={isAnalyzing ? "Running..." : "Waiting"}
+            status={agentStatus[0]}
           />
 
           <AgentCard
             title="Financial Agent"
-            description="Analyzes revenue, profit, valuation and financial ratios."
-            status={isAnalyzing ? "Running..." : "Waiting"}
+            description="Analyzes revenue, profit, valuation and ratios."
+            status={agentStatus[1]}
           />
 
           <AgentCard
             title="News Agent"
-            description="Fetches latest company news and market sentiment."
-            status={isAnalyzing ? "Running..." : "Waiting"}
+            description="Fetches latest company news and sentiment."
+            status={agentStatus[2]}
           />
 
           <AgentCard
             title="Risk Agent"
-            description="Computes investment risks and possible warning signals."
-            status={isAnalyzing ? "Running..." : "Waiting"}
+            description="Computes investment risks."
+            status={agentStatus[3]}
           />
 
           <AgentCard
             title="Decision Agent"
-            description="Combines all AI outputs into a final investment recommendation."
-            status={isAnalyzing ? "Running..." : "Waiting"}
+            description="Produces final investment recommendation."
+            status={agentStatus[4]}
           />
 
         </div>
