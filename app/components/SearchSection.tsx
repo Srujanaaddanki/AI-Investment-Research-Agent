@@ -1,4 +1,18 @@
-export default function SearchSection() {
+"use client";
+
+import { useState } from "react";
+
+interface SearchSectionProps {
+  onAnalyze: (company: string, exchange: string) => void;
+}
+
+export default function SearchSection({
+  onAnalyze,
+}: SearchSectionProps) {
+
+  const [company, setCompany] = useState("");
+  const [exchange, setExchange] = useState("NSE");
+
   return (
     <section className="max-w-4xl mx-auto px-6 py-10">
 
@@ -14,41 +28,45 @@ export default function SearchSection() {
 
         <div className="space-y-6">
 
-          {/* Company Name */}
-
           <div>
+
             <label className="block mb-2 text-sm text-slate-300">
               Company Name
             </label>
 
             <input
               type="text"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
               placeholder="Example: Apple, Tesla, Infosys..."
               className="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:border-blue-500"
             />
+
           </div>
 
-          {/* Market */}
-
           <div>
+
             <label className="block mb-2 text-sm text-slate-300">
               Stock Exchange
             </label>
 
             <select
+              value={exchange}
+              onChange={(e) => setExchange(e.target.value)}
               className="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 focus:outline-none focus:border-blue-500"
             >
-              <option>NSE</option>
-              <option>BSE</option>
-              <option>NASDAQ</option>
-              <option>NYSE</option>
+              <option value="NSE">NSE</option>
+              <option value="BSE">BSE</option>
+              <option value="NASDAQ">NASDAQ</option>
+              <option value="NYSE">NYSE</option>
             </select>
+
           </div>
 
-          {/* Analyze Button */}
-
           <button
-            className="w-full bg-blue-600 hover:bg-blue-700 transition rounded-xl py-4 font-semibold text-lg"
+            onClick={() => onAnalyze(company.trim(), exchange)}
+            disabled={company.trim() === ""}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed transition rounded-xl py-4 font-semibold text-lg"
           >
             Analyze Company
           </button>
