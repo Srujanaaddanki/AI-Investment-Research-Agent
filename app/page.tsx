@@ -5,8 +5,12 @@ import { useState } from "react";
 import Header from "./components/Header";
 import SearchSection from "./components/SearchSection";
 import AgentCard from "./components/AgentCard";
+import ResultsDashboard from "./components/ResultsDashboard";
 
 export default function Home() {
+
+  const [company, setCompany] = useState("");
+
   const [agentStatus, setAgentStatus] = useState([
     "Waiting",
     "Waiting",
@@ -15,13 +19,19 @@ export default function Home() {
     "Waiting",
   ]);
 
+  const [showDashboard, setShowDashboard] = useState(false);
+
   const handleAnalyze = async (
-    company: string,
+    companyName: string,
     exchange: string
   ) => {
 
-    console.log(company);
-    console.log(exchange);
+    console.log("Company:", companyName);
+    console.log("Exchange:", exchange);
+
+    setCompany(companyName);
+
+    setShowDashboard(false);
 
     const status = [
       "Waiting",
@@ -31,74 +41,89 @@ export default function Home() {
       "Waiting",
     ];
 
+    setAgentStatus([...status]);
+
     for (let i = 0; i < status.length; i++) {
 
       status[i] = "Running...";
       setAgentStatus([...status]);
 
-      await new Promise(resolve => setTimeout(resolve, 1200));
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1200)
+      );
 
       status[i] = "Completed";
       setAgentStatus([...status]);
 
     }
 
+    await new Promise((resolve) =>
+      setTimeout(resolve, 500)
+    );
+
+    setShowDashboard(true);
+
   };
 
   return (
+
     <main className="min-h-screen bg-slate-950 text-white">
 
       <Header />
 
       <section className="max-w-7xl mx-auto px-6 py-10">
 
-        <h2 className="text-5xl font-bold">
+        <h1 className="text-5xl font-bold">
           Research Stocks Smarter
-        </h2>
+        </h1>
 
         <p className="mt-5 text-slate-400 max-w-2xl">
           Analyze any listed company using multiple AI agents.
+          Get financial insights, latest news,
+          risk assessment and intelligent investment suggestions.
         </p>
 
       </section>
 
-      <SearchSection onAnalyze={handleAnalyze} />
+      <SearchSection
+        onAnalyze={handleAnalyze}
+      />
 
       <section className="max-w-7xl mx-auto px-6 py-16">
 
         <h2 className="text-3xl font-bold mb-10">
-          AI Analysis Agents
+          AI Analysis Pipeline
         </h2>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
           <AgentCard
             title="Research Agent"
-            description="Collects company overview and market information."
+            description="Collects company profile and business overview."
             status={agentStatus[0]}
           />
 
           <AgentCard
             title="Financial Agent"
-            description="Analyzes revenue, profit, valuation and ratios."
+            description="Analyzes revenue, valuation and financial statements."
             status={agentStatus[1]}
           />
 
           <AgentCard
             title="News Agent"
-            description="Fetches latest company news and sentiment."
+            description="Collects latest news and market sentiment."
             status={agentStatus[2]}
           />
 
           <AgentCard
             title="Risk Agent"
-            description="Computes investment risks."
+            description="Computes investment risks and warning signals."
             status={agentStatus[3]}
           />
 
           <AgentCard
             title="Decision Agent"
-            description="Produces final investment recommendation."
+            description="Generates the final AI investment recommendation."
             status={agentStatus[4]}
           />
 
@@ -106,6 +131,16 @@ export default function Home() {
 
       </section>
 
+      {showDashboard && (
+
+        <ResultsDashboard
+          company={company}
+        />
+
+      )}
+
     </main>
+
   );
+
 }
