@@ -49,9 +49,16 @@ Return ONLY valid JSON in this exact format:
       temperature: 0.2,
     });
 
-    const content = response.choices[0]?.message?.content || "{}";
+    const content =
+response.choices[0]?.message?.content || "{}";
 
-    return JSON.parse(content);
+// Remove markdown code fences if Groq returns them
+const cleaned = content
+  .replace(/```json/g, "")
+  .replace(/```/g, "")
+  .trim();
+
+return JSON.parse(cleaned);
 
   } catch (error) {
 
