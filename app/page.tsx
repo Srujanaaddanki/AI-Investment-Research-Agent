@@ -6,8 +6,11 @@ import Header from "./components/Header";
 import SearchSection from "./components/SearchSection";
 import AgentCard from "./components/AgentCard";
 import ResultsDashboard from "./components/ResultsDashboard";
+import SplashScreen from "./components/SplashScreen";
 
 export default function Home() {
+
+  const [showSplash, setShowSplash] = useState(true);
 
   const [company, setCompany] = useState("");
 
@@ -128,8 +131,11 @@ export default function Home() {
   };
 
   return (
-
-    <main className="min-h-screen bg-slate-950 text-white">
+    <>
+      {showSplash && (
+        <SplashScreen onComplete={() => setShowSplash(false)} />
+      )}
+      <main className="min-h-screen bg-slate-950 text-white">
 
       <Header />
 
@@ -269,7 +275,7 @@ export default function Home() {
       }
 
     </main>
-
+    </>
   );
 
 }
