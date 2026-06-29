@@ -13,7 +13,7 @@ export async function getAIRecommendation(
     const prompt = `
 You are an experienced financial analyst.
 
-Analyze the following company and provide an investment recommendation.
+Analyze the following company and provide an investment recommendation based on their financial metrics and latest news.
 
 Company:
 ${company}
@@ -24,21 +24,30 @@ ${JSON.stringify(financial, null, 2)}
 Latest News:
 ${JSON.stringify(news, null, 2)}
 
-Return ONLY valid JSON in this exact format:
+Instructions:
+1. Carefully evaluate the P/E ratio, price metrics, market cap, change, and recent news sentiment.
+2. Determine if the stock is a BUY, SELL, or HOLD. Be objective and select SELL or HOLD if metrics are poor or news is highly negative.
+3. Calculate a realistic confidence level percentage (e.g. "65%", "80%") based on the strength of the indicators.
+4. Extract 2 to 3 specific pros and 2 to 3 specific cons from the actual data provided.
+5. Provide a short custom summary and future outlook.
+
+Return ONLY valid JSON in this exact structure. Replace the placeholder values with your actual analysis results (do not copy the example values literally):
 
 {
-  "action": "BUY",
-  "confidence": "92%",
-  "summary": "A short investment summary in 2-3 sentences.",
+  "action": "BUY", // Must be one of: "BUY", "SELL", "HOLD"
+  "confidence": "75%", // Estimate percentage based on your analysis
+  "summary": "A custom 2-3 sentence investment summary.",
   "pros": [
-    "First positive factor (financial metric, growth driver, or news)."
+    "Fact-based positive point 1",
+    "Fact-based positive point 2"
   ],
   "cons": [
-    "First risk factor (valuation headwind, competition, or news)."
+    "Fact-based negative point 1",
+    "Fact-based negative point 2"
   ],
-  "futureOutlook": "A brief sentence summarizing future trajectory.",
+  "futureOutlook": "A custom future outlook sentence.",
   "risk": {
-      "score": 32,
+      "score": 35,
       "level": "Low",
       "volatility": "Medium"
   }
