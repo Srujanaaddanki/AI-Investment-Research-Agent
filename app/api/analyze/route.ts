@@ -31,27 +31,31 @@ export async function POST(request: Request) {
     // ----------------------------
     const historicalData = await getHistoricalData(companyInfo.symbol);
 
-    // Save history search to database
-    await prisma.analysis.create({
-      data: {
-        company: companyInfo.name,
-        symbol: companyInfo.symbol,
-        exchange: companyInfo.exchange,
+    // Save history search to database (gracefully catch read-only filesystem errors on Vercel)
+    try {
+      await prisma.analysis.create({
+        data: {
+          company: companyInfo.name,
+          symbol: companyInfo.symbol,
+          exchange: companyInfo.exchange,
 
-        price: financialData.price,
-        currency: financialData.currency,
+          price: financialData.price,
+          currency: financialData.currency,
 
-        marketCap: financialData.marketCap,
-        peRatio: financialData.peRatio,
-        eps: financialData.eps,
+          marketCap: financialData.marketCap,
+          peRatio: financialData.peRatio,
+          eps: financialData.eps,
 
-        recommendation: recommendation.action,
-        confidence: recommendation.confidence,
+          recommendation: recommendation.action,
+          confidence: recommendation.confidence,
 
-        riskLevel: riskProfile.level,
-        riskScore: riskProfile.score,
-      },
-    });
+          riskLevel: riskProfile.level,
+          riskScore: riskProfile.score,
+        },
+      });
+    } catch (dbErr) {
+      console.warn("Database write skipped (likely read-only serverless environment):", dbErr);
+    }
 
     return NextResponse.json({
       company: companyInfo,
