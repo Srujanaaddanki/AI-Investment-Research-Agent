@@ -1,54 +1,79 @@
-export default function RecommendationCard() {
-  return (
-    <div className="bg-slate-900 border border-green-600 rounded-2xl p-6 shadow-lg">
+interface RecommendationProps {
+  recommendation: any;
+}
 
-      <h3 className="text-2xl font-bold mb-6">
+export default function RecommendationCard({
+  recommendation,
+}: RecommendationProps) {
+
+  if (!recommendation) {
+    return null;
+  }
+
+  const action =
+    recommendation.action ??
+    recommendation.recommendation ??
+    "HOLD";
+
+  const confidence =
+    recommendation.confidence ?? "80%";
+
+  const summary =
+    recommendation.summary ??
+    recommendation.reason ??
+    "AI analysis will appear here.";
+
+  const color =
+    action === "BUY"
+      ? "text-green-400"
+      : action === "SELL"
+      ? "text-red-400"
+      : "text-yellow-400";
+
+  return (
+
+    <div className="bg-slate-900 rounded-2xl border border-green-700 p-6">
+
+      <h3 className="text-xl font-bold mb-5">
         AI Recommendation
       </h3>
 
-      <div className="space-y-5">
+      <div className="space-y-4">
 
         <div className="flex justify-between">
-
           <span className="text-slate-400">
             Recommendation
           </span>
 
-          <span className="text-green-400 font-bold text-xl">
-            BUY
+          <span className={`text-xl font-bold ${color}`}>
+            {action}
           </span>
-
         </div>
 
         <div className="flex justify-between">
-
           <span className="text-slate-400">
             Confidence
           </span>
 
-          <span className="font-bold">
-            91%
+          <span>
+            {confidence}
           </span>
-
         </div>
 
         <div>
-
           <p className="text-slate-400 mb-2">
             AI Summary
           </p>
 
-          <p className="leading-7">
-            The company shows healthy financial performance,
-            positive market sentiment and comparatively low
-            investment risk. Based on the available information,
-            this stock appears suitable for long-term investors.
+          <p className="text-slate-200 leading-7">
+            {summary}
           </p>
-
         </div>
 
       </div>
 
     </div>
+
   );
+
 }

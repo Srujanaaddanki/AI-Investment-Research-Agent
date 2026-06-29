@@ -1,45 +1,97 @@
-export default function FinancialCard() {
-  return (
-    <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6">
+interface FinancialProps {
+  financial: {
+    price: number;
+    currency: string;
+    marketCap: number;
+    peRatio: number;
+    eps: number;
+  };
+}
 
-      <h3 className="text-2xl font-bold mb-6">
+export default function FinancialCard({
+  financial,
+}: FinancialProps) {
+
+  return (
+
+    <div className="bg-slate-900 rounded-2xl border border-slate-700 p-6">
+
+      <h3 className="text-xl font-bold mb-5">
+
         Financial Summary
+
       </h3>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="space-y-3">
 
-        <div>
-          <p className="text-slate-400 text-sm">Current Price</p>
-          <p className="text-2xl font-bold">$--</p>
+        <div className="flex justify-between">
+
+          <span className="text-slate-400">
+
+            Current Price
+
+          </span>
+
+          <span>
+
+            {financial.currency} {financial.price}
+
+          </span>
+
         </div>
 
-        <div>
-          <p className="text-slate-400 text-sm">Market Cap</p>
-          <p className="text-2xl font-bold">--</p>
+        <div className="flex justify-between">
+
+          <span className="text-slate-400">
+
+            Market Cap
+
+          </span>
+
+          <span>
+
+            {financial.marketCap.toLocaleString()}
+
+          </span>
+
         </div>
 
-        <div>
-          <p className="text-slate-400 text-sm">P/E Ratio</p>
-          <p className="text-2xl font-bold">--</p>
+        <div className="flex justify-between">
+
+          <span className="text-slate-400">
+
+            P/E Ratio
+
+          </span>
+
+          <span>
+
+            {financial.peRatio}
+
+          </span>
+
         </div>
 
-        <div>
-          <p className="text-slate-400 text-sm">EPS</p>
-          <p className="text-2xl font-bold">--</p>
-        </div>
+        <div className="flex justify-between">
 
-        <div>
-          <p className="text-slate-400 text-sm">Revenue</p>
-          <p className="text-2xl font-bold">--</p>
-        </div>
+          <span className="text-slate-400">
 
-        <div>
-          <p className="text-slate-400 text-sm">Dividend Yield</p>
-          <p className="text-2xl font-bold">--</p>
+            EPS
+
+          </span>
+
+          <span>
+
+            {financial.eps}
+
+          </span>
+
         </div>
 
       </div>
 
     </div>
+
   );
+
 }
