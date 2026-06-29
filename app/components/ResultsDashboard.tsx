@@ -3,6 +3,7 @@ import FinancialCard from "./FinancialCard";
 import NewsCard from "./NewsCard";
 import RiskCard from "./RiskCard";
 import RecommendationCard from "./RecommendationCard";
+import StockChart from "./StockChart";
 
 interface DashboardProps {
   data: any;
@@ -23,6 +24,16 @@ export default function ResultsDashboard({
         AI Investment Report
 
       </h2>
+
+      {data.historicalData && (
+        <div className="mb-8">
+          <StockChart
+            symbol={data.company?.symbol || ""}
+            initialData={data.historicalData}
+            currency={data.financial?.currency || "USD"}
+          />
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-2 gap-6">
 
@@ -60,4 +71,4 @@ export default function ResultsDashboard({
 
   );
 
-}
+}

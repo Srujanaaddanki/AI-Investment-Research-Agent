@@ -47,18 +47,18 @@ export default function SearchSection({
         <input
           value={company}
           onChange={(e) => setCompany(e.target.value)}
-          className="w-full rounded-lg bg-slate-800 p-4 mb-6"
-          placeholder="Tesla"
+          className="w-full rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none p-4 mb-6 transition-all duration-200"
+          placeholder="e.g. Apple or TCS"
         />
 
-        <label className="block mb-2">
+        <label className="block mb-2 text-sm font-semibold text-slate-300">
           Stock Exchange
         </label>
 
         <select
           value={exchange}
           onChange={(e) => setExchange(e.target.value)}
-          className="w-full rounded-lg bg-slate-800 p-4 mb-8"
+          className="w-full rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none p-4 mb-8 transition-all duration-200 appearance-none cursor-pointer"
         >
           <option>NSE</option>
           <option>BSE</option>
@@ -68,7 +68,7 @@ export default function SearchSection({
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 py-4 text-xl font-bold"
+          className="w-full rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white py-4 text-lg font-bold shadow-lg shadow-cyan-950/30 transition-all duration-200 active:scale-[0.99] cursor-pointer"
         >
           Analyze Company
         </button>

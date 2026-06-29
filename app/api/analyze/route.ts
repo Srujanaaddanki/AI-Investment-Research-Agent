@@ -1,123 +1,70 @@
+
+import { getHistoricalData } from "../../lib/history";
 import { NextResponse } from "next/server";
-
 import { prisma } from "../../lib/prisma";
-
-import { getCompanyData } from "../../lib/yahoo";
-import { getLatestNews } from "../../lib/news";
-import { getAIRecommendation } from "../../lib/groq";
+import { compiledAgentGraph } from "../../lib/agentGraph";
 
 export async function POST(request: Request) {
   try {
-    const { company } = await request.json();
+    const { company, exchange } = await request.json();
 
     // ----------------------------
-    // Financial Agent
+    // Run LangGraph Agent StateGraph
     // ----------------------------
+    const graphState = await (await compiledAgentGraph).invoke({
+      companyQuery: company,
+      exchange: exchange || "NSE",
+    });
 
-    const companyData = await getCompanyData(company);
+    const companyInfo = graphState.companyInfo;
+    const financialData = graphState.financialData;
+    const newsData = graphState.newsData || [];
+    const riskProfile = graphState.riskProfile;
+    const recommendation = graphState.recommendation;
 
-    // ----------------------------
-    // News Agent
-    // ----------------------------
-
-    let news = [];
-
-    try {
-      news = await getLatestNews(company);
-    } catch (err) {
-      console.error("News Agent Error:", err);
-
-      news = [];
+    if (!companyInfo || !financialData || !riskProfile || !recommendation) {
+      throw new Error("LangGraph execution completed with missing state components");
     }
 
     // ----------------------------
-    // Risk Agent
+    // Fetch default 1Y historical chart data for initial load
     // ----------------------------
+    const historicalData = await getHistoricalData(companyInfo.symbol);
 
-    let riskScore = 50;
-
-    const pe = companyData.financial.peRatio;
-
-    if (pe && pe > 35) riskScore += 15;
-
-    if (pe && pe < 15) riskScore -= 10;
-
-    const change =
-      Math.abs(companyData.financial.change ?? 0);
-
-    if (change > 5) riskScore += 10;
-
-    riskScore = Math.min(100, Math.max(0, riskScore));
-
-    const riskLevel =
-      riskScore < 35
-        ? "Low"
-        : riskScore < 70
-        ? "Medium"
-        : "High";
-
-    // ----------------------------
-    // Decision Agent
-    // ----------------------------
-
-    let ai = {
-      action: "HOLD",
-      confidence: "70%",
-      summary:
-        "AI recommendation is temporarily unavailable.",
-      pros: [],
-      cons: [],
-      futureOutlook:
-        "No outlook available.",
-    };
-
-    try {
-      ai = await getAIRecommendation(
-        companyData.company.name,
-        companyData.financial,
-        news
-      );
-    } catch (err) {
-      console.error("Groq Error:", err);
-    }
-    
+    // Save history search to database
     await prisma.analysis.create({
-  data: {
-    company: companyData.company.name,
-    symbol: companyData.company.symbol,
-    exchange: companyData.company.exchange,
+      data: {
+        company: companyInfo.name,
+        symbol: companyInfo.symbol,
+        exchange: companyInfo.exchange,
 
-    price: companyData.financial.price,
-    currency: companyData.financial.currency,
+        price: financialData.price,
+        currency: financialData.currency,
 
-    marketCap: companyData.financial.marketCap,
-    peRatio: companyData.financial.peRatio,
-    eps: companyData.financial.eps,
+        marketCap: financialData.marketCap,
+        peRatio: financialData.peRatio,
+        eps: financialData.eps,
 
-    recommendation: ai.action,
-    confidence: ai.confidence,
+        recommendation: recommendation.action,
+        confidence: recommendation.confidence,
 
-    riskLevel: riskLevel,
-    riskScore: riskScore,
-  },
-});
+        riskLevel: riskProfile.level,
+        riskScore: riskProfile.score,
+      },
+    });
 
     return NextResponse.json({
-      company: companyData.company,
-
-      financial: companyData.financial,
-
-      news,
-
+      company: companyInfo,
+      financial: financialData,
+      historicalData,
+      news: newsData,
       risk: {
-        score: riskScore,
-        level: riskLevel,
-        volatility:
-          change > 5 ? "High" : "Medium",
-        confidence: ai.confidence,
+        score: riskProfile.score,
+        level: riskProfile.level,
+        volatility: riskProfile.volatility,
+        confidence: recommendation.confidence,
       },
-
-      recommendation: ai,
+      recommendation: recommendation,
     });
   } catch (err) {
     console.error("Route Error:", err);

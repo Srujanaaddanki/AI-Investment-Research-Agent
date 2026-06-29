@@ -27,13 +27,20 @@ ${JSON.stringify(news, null, 2)}
 Return ONLY valid JSON in this exact format:
 
 {
-  "action":"BUY",
-  "confidence":"92%",
-  "summary":"A short investment summary in 2-3 sentences.",
-  "risk":{
-      "score":32,
-      "level":"Low",
-      "volatility":"Medium"
+  "action": "BUY",
+  "confidence": "92%",
+  "summary": "A short investment summary in 2-3 sentences.",
+  "pros": [
+    "First positive factor (financial metric, growth driver, or news)."
+  ],
+  "cons": [
+    "First risk factor (valuation headwind, competition, or news)."
+  ],
+  "futureOutlook": "A brief sentence summarizing future trajectory.",
+  "risk": {
+      "score": 32,
+      "level": "Low",
+      "volatility": "Medium"
   }
 }
 `;
@@ -68,6 +75,9 @@ return JSON.parse(cleaned);
       action: "HOLD",
       confidence: "50%",
       summary: "Unable to generate AI recommendation.",
+      pros: [],
+      cons: [],
+      futureOutlook: "No outlook available.",
 
       risk: {
         score: 50,

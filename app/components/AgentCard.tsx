@@ -20,6 +20,10 @@ export default function AgentCard({
     badgeColor = "bg-green-600";
   }
 
+  if (status === "Failed") {
+    badgeColor = "bg-red-600 text-white animate-pulse";
+  }
+
   return (
     <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6">
 

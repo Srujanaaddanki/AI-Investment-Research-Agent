@@ -15,6 +15,8 @@ export default function Home() {
 
   const [showDashboard, setShowDashboard] = useState(false);
 
+  const [error, setError] = useState<string | null>(null);
+
   const [agentStatus, setAgentStatus] = useState([
     "Waiting",
     "Waiting",
@@ -59,6 +61,7 @@ export default function Home() {
     try {
 
       setLoading(true);
+      setError(null);
 
       setCompany(companyName);
 
@@ -86,7 +89,15 @@ export default function Home() {
 
       });
 
+      if (!response.ok) {
+        throw new Error(`Server returned HTTP ${response.status}`);
+      }
+
       const data = await response.json();
+
+      if (data.company && data.company.name === "Company Not Found") {
+        throw new Error(`The company "${companyName}" was not found on exchange ${exchange}.`);
+      }
 
       console.log(data);
 
@@ -94,11 +105,19 @@ export default function Home() {
 
       setShowDashboard(true);
 
-    } catch (error) {
+    } catch (err: any) {
 
-      console.error(error);
+      console.error(err);
 
-      alert("Analysis Failed");
+      setAgentStatus([
+        "Failed",
+        "Failed",
+        "Failed",
+        "Failed",
+        "Failed",
+      ]);
+
+      setError(err.message || "AI Analysis Pipeline failed to execute. Please verify the company name or check database connection.");
 
     } finally {
 
@@ -139,6 +158,23 @@ export default function Home() {
         onAnalyze={handleAnalyze}
 
       />
+
+      {error && (
+        <section className="max-w-4xl mx-auto px-6 mb-10">
+          <div className="bg-red-950/25 border border-red-500/20 text-red-200 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300">
+            <div>
+              <h4 className="font-bold text-red-400 text-lg mb-1">Analysis Failed</h4>
+              <p className="text-sm text-red-300/80">{error}</p>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="px-4 py-2 bg-red-900/40 hover:bg-red-900/60 text-red-200 text-xs font-semibold rounded-xl self-start md:self-center transition-all duration-200 cursor-pointer shadow border border-red-800/35"
+            >
+              Dismiss
+            </button>
+          </div>
+        </section>
+      )}
 
       <section className="max-w-7xl mx-auto px-6 py-16">
 
