@@ -1,43 +1,85 @@
-import yahooFinance from "yahoo-finance2";
+import YahooFinance from "yahoo-finance2";
 
-export async function getCompanyData(symbol: string) {
+const yahooFinance = new YahooFinance();
+
+export async function getCompanyData(company: string) {
   try {
+    // -----------------------------
+    // Step 1 : Search company
+    // -----------------------------
+    const search: any = await yahooFinance.search(company);
+
+    if (!search?.quotes?.length) {
+      throw new Error("Company not found");
+    }
+
+    // -----------------------------
+    // Step 2 : Pick best stock result
+    // -----------------------------
+    const bestMatch =
+      search.quotes.find(
+        (item: any) => item.quoteType === "EQUITY"
+      ) ?? search.quotes[0];
+
+    const symbol = bestMatch.symbol;
+
+    // -----------------------------
+    // Step 3 : Get live quote
+    // -----------------------------
     const quote: any = await yahooFinance.quote(symbol);
 
     return {
-      name: quote.longName || quote.shortName || symbol,
-      exchange: quote.fullExchangeName || "Unknown",
-      sector: quote.sector || "Technology",
-      ceo: "N/A",
-      country: "USA",
-      employees: "N/A",
+      company: {
+        name:
+          quote.longName ??
+          quote.shortName ??
+          bestMatch.shortname ??
+          company,
+
+        symbol,
+
+        exchange:
+          quote.fullExchangeName ??
+          bestMatch.exchange ??
+          "N/A",
+
+        sector:
+          quote.sector ??
+          "N/A",
+      },
 
       financial: {
-        price: quote.regularMarketPrice ?? 0,
-        currency: quote.currency ?? "USD",
-        marketCap: quote.marketCap ?? 0,
-        peRatio: quote.trailingPE ?? 0,
-        eps: quote.epsTrailingTwelveMonths ?? 0,
+        price:
+          quote.regularMarketPrice ?? null,
+
+        currency:
+          quote.currency ?? "USD",
+
+        change:
+          quote.regularMarketChangePercent ?? null,
+
+        marketCap:
+          quote.marketCap ?? null,
+
+        peRatio:
+          quote.trailingPE ?? null,
+
+        eps:
+          quote.epsTrailingTwelveMonths ?? null,
+
+        high52Week:
+          quote.fiftyTwoWeekHigh ?? null,
+
+        low52Week:
+          quote.fiftyTwoWeekLow ?? null,
+
+        volume:
+          quote.regularMarketVolume ?? null,
       },
     };
   } catch (error) {
-    console.error("Yahoo Finance Error:", error);
+    console.error("Yahoo Error:", error);
 
-    return {
-      name: symbol,
-      exchange: "Unknown",
-      sector: "Unknown",
-      ceo: "Unknown",
-      country: "Unknown",
-      employees: "Unknown",
-
-      financial: {
-        price: 0,
-        currency: "USD",
-        marketCap: 0,
-        peRatio: 0,
-        eps: 0,
-      },
-    };
+    throw error;
   }
 }

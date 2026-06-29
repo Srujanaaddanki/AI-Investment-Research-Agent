@@ -7,67 +7,134 @@ interface RiskProps {
   };
 }
 
-export default function RiskCard({ risk }: RiskProps) {
+export default function RiskCard({
+  risk,
+}: RiskProps) {
+
+  const getColor = () => {
+
+    if (risk.score <= 35)
+      return "bg-green-500";
+
+    if (risk.score <= 70)
+      return "bg-yellow-500";
+
+    return "bg-red-500";
+
+  };
+
+  const getTextColor = () => {
+
+    if (risk.score <= 35)
+      return "text-green-400";
+
+    if (risk.score <= 70)
+      return "text-yellow-400";
+
+    return "text-red-400";
+
+  };
+
   return (
+
     <div className="bg-slate-900 rounded-2xl border border-slate-700 p-6">
 
-      <h3 className="text-xl font-bold mb-5">
-        Risk Analysis
+      <h3 className="text-xl font-bold mb-6">
+
+        AI Risk Analysis
+
       </h3>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
 
-        <div className="flex justify-between">
-          <span className="text-slate-400">
-            Risk Score
-          </span>
+        <div>
 
-          <span className="font-semibold text-yellow-400">
-            {risk.score}/100
-          </span>
+          <div className="flex justify-between mb-2">
+
+            <span className="text-slate-400">
+
+              Overall Risk Score
+
+            </span>
+
+            <span className={getTextColor()}>
+
+              {risk.score}/100
+
+            </span>
+
+          </div>
+
+          <div className="w-full bg-slate-700 rounded-full h-3">
+
+            <div
+
+              className={`${getColor()} h-3 rounded-full transition-all duration-700`}
+
+              style={{
+
+                width: `${risk.score}%`
+
+              }}
+
+            />
+
+          </div>
+
         </div>
 
-        <div className="w-full bg-slate-700 rounded-full h-3">
-
-          <div
-            className="bg-yellow-400 h-3 rounded-full"
-            style={{ width: `${risk.score}%` }}
-          />
-
-        </div>
-
         <div className="flex justify-between">
+
           <span className="text-slate-400">
-            Overall Risk
+
+            Risk Level
+
           </span>
 
-          <span className="text-green-400">
+          <span className={getTextColor()}>
+
             {risk.level}
+
           </span>
+
         </div>
 
         <div className="flex justify-between">
+
           <span className="text-slate-400">
+
             Market Volatility
+
           </span>
 
           <span>
+
             {risk.volatility}
+
           </span>
+
         </div>
 
         <div className="flex justify-between">
+
           <span className="text-slate-400">
+
             AI Confidence
+
           </span>
 
           <span>
+
             {risk.confidence}
+
           </span>
+
         </div>
 
       </div>
 
     </div>
+
   );
+
 }
