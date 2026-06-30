@@ -1,6 +1,7 @@
 import YahooFinance from "yahoo-finance2";
 import { getLatestNews } from "./news";
 import { getAIRecommendation } from "./groq";
+import { StateGraph, Annotation, START, END } from "@langchain/langgraph";
 
 const yahooFinance = new YahooFinance();
 
@@ -52,93 +53,20 @@ export interface AgentState {
   };
 }
 
-export class StateGraph {
-  private nodes: Map<string, (state: AgentState) => Promise<Partial<AgentState>>> = new Map();
-  private edges: Map<string, string[]> = new Map();
-  private entryPoint: string | null = null;
-
-  addNode(name: string, fn: (state: AgentState) => Promise<Partial<AgentState>>) {
-    this.nodes.set(name, fn);
-    return this;
-  }
-
-  addEdge(from: string, to: string) {
-    if (!this.edges.has(from)) {
-      this.edges.set(from, []);
-    }
-    this.edges.get(from)!.push(to);
-    return this;
-  }
-
-  setEntryPoint(name: string) {
-    this.entryPoint = name;
-    return this;
-  }
-
-  async compile() {
-    return {
-      invoke: async (initialState: AgentState): Promise<AgentState> => {
-        let state = { ...initialState };
-        console.log(`\n=== [LangGraph] Invoking Agent Graph for Query: "${state.companyQuery}" ===`);
-
-        // Node 1: Research Agent
-        if (this.nodes.has("research_agent")) {
-          console.log("[LangGraph Node] Running research_agent...");
-          const update = await this.nodes.get("research_agent")!(state);
-          state = { ...state, ...update };
-          console.log(`[LangGraph Communication] research_agent output symbol: "${state.companyInfo?.symbol}"`);
-        }
-
-        // Nodes 2 & 3: Run Financial Agent and News Agent in parallel
-        // Both consume Research Agent's output (symbol & name)
-        const parallelJobs: Promise<Partial<AgentState>>[] = [];
-        
-        if (this.nodes.has("financial_agent")) {
-          console.log("[LangGraph Node] Preparing financial_agent (Consuming research_agent output)...");
-          parallelJobs.push(this.nodes.get("financial_agent")!(state));
-        }
-        
-        if (this.nodes.has("news_agent")) {
-          console.log("[LangGraph Node] Preparing news_agent (Consuming research_agent output)...");
-          parallelJobs.push(this.nodes.get("news_agent")!(state));
-        }
-
-        const updates = await Promise.all(parallelJobs);
-        for (const update of updates) {
-          state = { ...state, ...update };
-        }
-        console.log("[LangGraph Communication] financial_agent & news_agent nodes execution finished.");
-
-        // Node 4: Risk Agent
-        // Consumes output from Financial Agent (PE, change) and News Agent (sentiment volume)
-        if (this.nodes.has("risk_agent")) {
-          console.log("[LangGraph Node] Running risk_agent (Consuming financial_agent & news_agent outputs)...");
-          const update = await this.nodes.get("risk_agent")!(state);
-          state = { ...state, ...update };
-          console.log(`[LangGraph Communication] risk_agent calculated score: ${state.riskProfile?.score}/100 (${state.riskProfile?.level} Risk)`);
-        }
-
-        // Node 5: Decision Agent
-        // Consumes inputs from all previous agent nodes (Research, Financial, News, Risk)
-        if (this.nodes.has("decision_agent")) {
-          console.log("[LangGraph Node] Running decision_agent (Consuming all previous agent outputs)...");
-          const update = await this.nodes.get("decision_agent")!(state);
-          state = { ...state, ...update };
-          console.log(`[LangGraph Communication] decision_agent generated recommendation: ${state.recommendation?.action}`);
-        }
-
-        console.log("=== [LangGraph] Agent Graph invocation completed successfully ===\n");
-        return state;
-      }
-    };
-  }
-}
-
-// Instantiate and compile the Agent Graph
-const graph = new StateGraph();
+// Declare the state annotation schema using the official LangGraph Annotation library
+export const AgentStateAnnotation = Annotation.Root({
+  companyQuery: Annotation<string>(),
+  exchange: Annotation<string>(),
+  companyInfo: Annotation<AgentState["companyInfo"]>(),
+  financialData: Annotation<AgentState["financialData"]>(),
+  newsData: Annotation<AgentState["newsData"]>(),
+  riskProfile: Annotation<AgentState["riskProfile"]>(),
+  recommendation: Annotation<AgentState["recommendation"]>(),
+});
 
 // Research Agent Node
-graph.addNode("research_agent", async (state) => {
+async function researchAgentNode(state: typeof AgentStateAnnotation.State): Promise<Partial<typeof AgentStateAnnotation.State>> {
+  console.log("[LangGraph Node] Running research_agent...");
   const search: any = await yahooFinance.search(state.companyQuery);
   if (!search?.quotes?.length) {
     throw new Error(`Company "${state.companyQuery}" not found.`);
@@ -151,18 +79,20 @@ graph.addNode("research_agent", async (state) => {
   const symbol = bestMatch.symbol;
   const quote: any = await yahooFinance.quote(symbol);
 
-  return {
-    companyInfo: {
-      name: quote.longName ?? quote.shortName ?? bestMatch.shortname ?? state.companyQuery,
-      symbol,
-      exchange: quote.fullExchangeName ?? bestMatch.exchange ?? "N/A",
-      sector: quote.sector ?? "N/A",
-    }
+  const companyInfo = {
+    name: quote.longName ?? quote.shortName ?? bestMatch.shortname ?? state.companyQuery,
+    symbol,
+    exchange: quote.fullExchangeName ?? bestMatch.exchange ?? "N/A",
+    sector: quote.sector ?? "N/A",
   };
-});
+
+  console.log(`[LangGraph Communication] research_agent output symbol: "${companyInfo.symbol}"`);
+  return { companyInfo };
+}
 
 // Financial Agent Node
-graph.addNode("financial_agent", async (state) => {
+async function financialAgentNode(state: typeof AgentStateAnnotation.State): Promise<Partial<typeof AgentStateAnnotation.State>> {
+  console.log("[LangGraph Node] Preparing financial_agent (Consuming research_agent output)...");
   if (!state.companyInfo) {
     throw new Error("Financial Agent failed: Missing Research Agent output (companyInfo)");
   }
@@ -183,10 +113,11 @@ graph.addNode("financial_agent", async (state) => {
       volume: quote.regularMarketVolume ?? null,
     }
   };
-});
+}
 
 // News Agent Node
-graph.addNode("news_agent", async (state) => {
+async function newsAgentNode(state: typeof AgentStateAnnotation.State): Promise<Partial<typeof AgentStateAnnotation.State>> {
+  console.log("[LangGraph Node] Preparing news_agent (Consuming research_agent output)...");
   if (!state.companyInfo) {
     throw new Error("News Agent failed: Missing Research Agent output (companyInfo)");
   }
@@ -201,10 +132,11 @@ graph.addNode("news_agent", async (state) => {
   return {
     newsData: news
   };
-});
+}
 
 // Risk Agent Node
-graph.addNode("risk_agent", async (state) => {
+async function riskAgentNode(state: typeof AgentStateAnnotation.State): Promise<Partial<typeof AgentStateAnnotation.State>> {
+  console.log("[LangGraph Node] Running risk_agent (Consuming financial_agent & news_agent outputs)...");
   if (!state.financialData) {
     throw new Error("Risk Agent failed: Missing Financial Agent output (financialData)");
   }
@@ -228,17 +160,19 @@ graph.addNode("risk_agent", async (state) => {
   riskScore = Math.min(100, Math.max(0, riskScore));
   const riskLevel = riskScore < 35 ? "Low" : riskScore < 70 ? "Medium" : "High";
 
-  return {
-    riskProfile: {
-      score: riskScore,
-      level: riskLevel,
-      volatility: change > 5 ? "High" : "Medium",
-    }
+  const riskProfile = {
+    score: riskScore,
+    level: riskLevel,
+    volatility: change > 5 ? "High" : "Medium",
   };
-});
+
+  console.log(`[LangGraph Communication] risk_agent calculated score: ${riskProfile.score}/100 (${riskProfile.level} Risk)`);
+  return { riskProfile };
+}
 
 // Decision Agent Node
-graph.addNode("decision_agent", async (state) => {
+async function decisionAgentNode(state: typeof AgentStateAnnotation.State): Promise<Partial<typeof AgentStateAnnotation.State>> {
+  console.log("[LangGraph Node] Running decision_agent (Consuming all previous agent outputs)...");
   if (!state.companyInfo || !state.financialData || !state.riskProfile) {
     throw new Error("Decision Agent failed: Missing inputs from previous nodes");
   }
@@ -250,27 +184,47 @@ graph.addNode("decision_agent", async (state) => {
     state.riskProfile
   );
 
-  return {
-    recommendation: {
-      action: aiRecommendation.action || "WATCHLIST",
-      confidence: aiRecommendation.confidence || "70%",
-      summary: aiRecommendation.summary || "AI recommendation is temporarily unavailable.",
-      pros: aiRecommendation.pros || [],
-      cons: aiRecommendation.cons || [],
-      futureOutlook: aiRecommendation.futureOutlook || "No outlook available.",
-      influencingMetrics: aiRecommendation.influencingMetrics || [],
-      influencingNews: aiRecommendation.influencingNews || [],
-    }
+  const recommendation = {
+    action: aiRecommendation.action || "WATCHLIST",
+    confidence: aiRecommendation.confidence || "70%",
+    summary: aiRecommendation.summary || "AI recommendation is temporarily unavailable.",
+    pros: aiRecommendation.pros || [],
+    cons: aiRecommendation.cons || [],
+    futureOutlook: aiRecommendation.futureOutlook || "No outlook available.",
+    influencingMetrics: aiRecommendation.influencingMetrics || [],
+    influencingNews: aiRecommendation.influencingNews || [],
   };
+
+  console.log(`[LangGraph Communication] decision_agent generated recommendation: ${recommendation.action}`);
+  return { recommendation };
+}
+
+// Build the LangGraph Workflow
+const workflow = new StateGraph(AgentStateAnnotation)
+  .addNode("research_agent", researchAgentNode)
+  .addNode("financial_agent", financialAgentNode)
+  .addNode("news_agent", newsAgentNode)
+  .addNode("risk_agent", riskAgentNode)
+  .addNode("decision_agent", decisionAgentNode)
+  // Define edges
+  .addEdge(START, "research_agent")
+  .addEdge("research_agent", "financial_agent")
+  .addEdge("research_agent", "news_agent")
+  .addEdge("financial_agent", "risk_agent")
+  .addEdge("news_agent", "risk_agent")
+  .addEdge("risk_agent", "decision_agent")
+  .addEdge("decision_agent", END);
+
+// Compile the graph
+const compiledWorkflow = workflow.compile();
+
+// Wrapped export to maintain exactly the same Promise-based .invoke logging interface
+export const compiledAgentGraph = Promise.resolve({
+  invoke: async (initialState: AgentState): Promise<AgentState> => {
+    console.log(`\n=== [LangGraph] Invoking Agent Graph for Query: "${initialState.companyQuery}" ===`);
+    const finalState = await compiledWorkflow.invoke(initialState) as AgentState;
+    console.log("[LangGraph Communication] financial_agent & news_agent nodes execution finished.");
+    console.log("=== [LangGraph] Agent Graph invocation completed successfully ===\n");
+    return finalState;
+  }
 });
-
-// Establish Edge connections
-graph.addEdge("research_agent", "financial_agent");
-graph.addEdge("research_agent", "news_agent");
-graph.addEdge("financial_agent", "risk_agent");
-graph.addEdge("news_agent", "risk_agent");
-graph.addEdge("risk_agent", "decision_agent");
-
-graph.setEntryPoint("research_agent");
-
-export const compiledAgentGraph = graph.compile();
