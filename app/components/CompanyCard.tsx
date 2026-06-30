@@ -55,7 +55,7 @@ export default function CompanyCard({
           </span>
 
           <span>
-            {company.sector}
+            {(!company.sector || company.sector === "N/A") ? "Not Available" : company.sector}
           </span>
         </div>
 

@@ -31,7 +31,6 @@ export default function Home() {
   const [analysisData, setAnalysisData] = useState<any>(null);
 
   const runAgents = async () => {
-
     const status = [
       "Waiting",
       "Waiting",
@@ -42,18 +41,35 @@ export default function Home() {
 
     setAgentStatus([...status]);
 
-    for (let i = 0; i < status.length; i++) {
+    // Node 1: Research Agent (Sequential entry point)
+    status[0] = "Running...";
+    setAgentStatus([...status]);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    status[0] = "Completed";
+    setAgentStatus([...status]);
 
-      status[i] = "Running...";
-      setAgentStatus([...status]);
+    // Node 2 & 3: Financial Agent & News Agent (Executed in parallel)
+    status[1] = "Running...";
+    status[2] = "Running...";
+    setAgentStatus([...status]);
+    await new Promise(resolve => setTimeout(resolve, 1300));
+    status[1] = "Completed";
+    status[2] = "Completed";
+    setAgentStatus([...status]);
 
-      await new Promise(resolve => setTimeout(resolve, 900));
+    // Node 4: Risk Agent (Sequential, consumes 2 & 3)
+    status[3] = "Running...";
+    setAgentStatus([...status]);
+    await new Promise(resolve => setTimeout(resolve, 900));
+    status[3] = "Completed";
+    setAgentStatus([...status]);
 
-      status[i] = "Completed";
-      setAgentStatus([...status]);
-
-    }
-
+    // Node 5: Decision Agent (Final node, generates recommendation)
+    status[4] = "Running...";
+    setAgentStatus([...status]);
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    status[4] = "Completed";
+    setAgentStatus([...status]);
   };
 
   const handleAnalyze = async (

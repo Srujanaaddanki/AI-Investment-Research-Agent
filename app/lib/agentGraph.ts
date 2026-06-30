@@ -47,6 +47,8 @@ export interface AgentState {
     pros: string[];
     cons: string[];
     futureOutlook: string;
+    influencingMetrics?: Array<{ name: string; value: string; impact: string }>;
+    influencingNews?: Array<{ title: string; impact: string }>;
   };
 }
 
@@ -244,17 +246,20 @@ graph.addNode("decision_agent", async (state) => {
   const aiRecommendation = await getAIRecommendation(
     state.companyInfo.name,
     state.financialData,
-    state.newsData || []
+    state.newsData || [],
+    state.riskProfile
   );
 
   return {
     recommendation: {
-      action: aiRecommendation.action || "HOLD",
+      action: aiRecommendation.action || "WATCHLIST",
       confidence: aiRecommendation.confidence || "70%",
       summary: aiRecommendation.summary || "AI recommendation is temporarily unavailable.",
       pros: aiRecommendation.pros || [],
       cons: aiRecommendation.cons || [],
-      futureOutlook: aiRecommendation.futureOutlook || "No outlook available."
+      futureOutlook: aiRecommendation.futureOutlook || "No outlook available.",
+      influencingMetrics: aiRecommendation.influencingMetrics || [],
+      influencingNews: aiRecommendation.influencingNews || [],
     }
   };
 });
