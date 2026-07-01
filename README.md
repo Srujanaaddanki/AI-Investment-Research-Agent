@@ -2,16 +2,16 @@
 
 An AI-powered multi-agent investment research platform built using **Next.js**, **TypeScript**, **LangGraph**, **Prisma ORM**, and **Yahoo Finance**.
 
-This platform automates equity research by executing a state-graph pipeline of specialized AI agents to gather data, analyze news, compute risks, and output structured investment recommendations alongside interactive charts.
-
 ---
 
-## 🚀 Key Features
+## 📈 Overview
+This platform automates equity research by executing a state-graph pipeline of specialized AI agents to gather data, analyze news, compute risks, and output structured investment recommendations ("BUY", "INVEST", "WATCHLIST", "PASS") alongside interactive charts.
 
+### Key Features
 - **✅ LangGraph State-Graph Workflow**: Implements a real, stateful agent graph where specialised agents communicate with each other by writing and reading a shared state.
-- **📈 Step 1: Historical Line Chart**: Fully interactive area line chart supporting multiple timeframes (`1D`, `5D`, `1M`, `3M`, `6M`, `1Y`, `5Y`) powered by ApexCharts.
-- **🕯️ Step 2: Professional Candlestick Chart**: Shows detailed Open, High, Low, Close (OHLC) candles with color indicators (green/red) and volume bar charts.
-- **🤖 Step 3: Multi-Agent Analysis Pipeline**:
+- **📈 Historical Line Chart**: Fully interactive area line chart supporting multiple timeframes (`1D`, `5D`, `1M`, `3M`, `6M`, `1Y`, `5Y`) powered by ApexCharts.
+- **🕯️ Professional Candlestick Chart**: Shows detailed Open, High, Low, Close (OHLC) candles with color indicators (green/red) and volume bar charts.
+- **🤖 Multi-Agent Analysis Pipeline**:
   - **Research Agent**: Resolves stock search queries into ticker symbols and exchange metadata.
   - **Financial Agent**: Fetches company statistics, PE ratio, 52-week margins, market cap, and eps.
   - **News Agent**: Gathers up-to-date market news articles for sentiment evaluation.
@@ -22,7 +22,6 @@ This platform automates equity research by executing a state-graph pipeline of s
 ---
 
 ## 🛠️ Tech Stack & Languages
-
 - **Programming Languages**: TypeScript, JavaScript, SQL (for migrations)
 - **Framework & Runtime**: Next.js (App Router), React, Node.js
 - **Styling**: Tailwind CSS
@@ -33,9 +32,9 @@ This platform automates equity research by executing a state-graph pipeline of s
 
 ---
 
-## 🔄 How It Works (Agent Architecture)
+## 🔄 How it works (Approach & Architecture)
 
-The backend utilizes a state-graph execution engine mimicking **LangGraph**:
+The backend utilizes a state-graph execution engine built with **LangGraph.js**:
 
 ```mermaid
 graph TD
@@ -50,9 +49,10 @@ graph TD
     DA --> Exit([Final AI Investment Report])
 ```
 
+### The State Graph Workflow
 1. **State Initialization**: The graph is invoked with `companyQuery` (e.g. "Apple") and `exchange`.
 2. **Research Node**: Searches Yahoo Finance for the ticker, picks the best match, and updates state with `companyInfo`.
-3. **Financial & News Nodes (Parallel)**:
+3. **Financial & News Nodes (Parallel Execution)**:
    - Financial Agent queries the real-time quote for the symbol.
    - News Agent pulls recent articles based on the resolved company name.
 4. **Risk Node**: Calculates the risk level by evaluating PE metrics, price change percent, and adjusting the score based on the volume of news articles gathered (inter-agent consumption).
@@ -60,15 +60,13 @@ graph TD
 
 ---
 
-## 📦 Installation & Setup
+## 📦 How to run it
 
 ### Prerequisites
-
 - Node.js (v18.x or above)
 - npm or yarn
 
 ### 1. Clone & Install Dependencies
-
 ```bash
 git clone https://github.com/Srujanaaddanki/AI-Investment-Research-Agent.git
 cd AI-Investment-Research-Agent/ai-investment-agent
@@ -76,43 +74,89 @@ npm install
 ```
 
 ### 2. Configure Environment Variables
-
 Create a `.env.local` file in the `ai-investment-agent` root directory:
-
 ```env
 GROQ_API_KEY=your_groq_api_key
 NEWS_API_KEY=your_news_api_key
 DATABASE_URL="file:./dev.db"
 ```
-
 Configure your `.env` file as well:
-
 ```env
 DATABASE_URL="file:./dev.db"
 ```
 
 ### 3. Setup Database Schema
-
 Push the Prisma database schema and generate the client:
-
 ```bash
 npx prisma generate
 npx prisma db push
 ```
 
 ### 4. Run the Development Server
-
 ```bash
 npm run dev
 ```
-
 Open [http://localhost:3000](http://localhost:3000) in your browser to start searching stocks.
 
 ---
 
-## 📈 Benefits
+## 🧠 Key decisions & trade-offs
 
-1. **Data-Backed Insights**: Blends hard financial ratios with recent market sentiment news in a unified decision framework.
-2. **No LLM Hallucinations on Numbers**: Crucial figures (P/E, Market Cap, Change) are queried directly from market feeds rather than guessed by LLMs.
-3. **Optimized Operations**: Lightweight graph architecture fetches sub-intervals on demand, preventing redundant expensive LLM pipelines.
-4. **Intuitive Visualization**: Interactive candlestick and line charts let you visually inspect historical price trends alongside agent reasoning.
+- **LangGraph.js for State Management**: Instead of nesting simple promises, we chose `@langchain/langgraph` to represent our agent nodes. This allows for clean state tracking, where each agent only edits specific fields of a shared annotation-root state. It also simplifies running tasks in parallel (like fetching financial metrics and searching news headlines) and joining their states before executing the risk evaluation.
+- **SQLite Database with Prisma ORM**: For a lightweight take-home submission, zipping and carrying a heavy database client (like Docker-based PostgreSQL) is inconvenient. SQLite allows the app to be fully self-contained. The DB creation in `app/api/analyze/route.ts` is wrapped in a try-catch block so that if the project is deployed to a read-only serverless platform like Vercel, it fails gracefully without disrupting the user experience.
+- **Groq SDK with Llama-3.3-70B**: The Groq API is chosen for its ultra-low latency and superior JSON structure compliance. Wall Street analysis requires consistent structured JSON formatting, and Llama 3.3 70B performs on-par with GPT-4 in structured JSON generation tasks while responding in under 2 seconds.
+- **Graceful API Fallbacks**: News APIs are notorious for rate-limiting or requiring paid tiers. In `app/lib/news.ts`, if the API query fails, the News Agent returns a structured placeholder block rather than throwing a system-wide exception, preventing API failure from crashing the entire analysis graph.
+- **Dynamic Frontend Animations vs Async Graph Processing**: A simulated step-timeline on the frontend (`runAgents` progress updates) keeps users engaged while the backend API asynchronously computes and compiles the report, making the UI feel fast and professional.
+
+---
+
+## 📈 Example runs
+
+Below is the actual output generated by the AI Investment Research Agent for a query on **Apple (AAPL)**:
+
+### 1. General Info & Market Stats
+- **Company Name**: Apple Inc.
+- **Ticker Symbol**: AAPL (NASDAQ)
+- **Sector**: Tech
+- **Current Price**: $294.42 USD
+- **PE Ratio**: 35.69
+- **Trailing EPS**: $8.25
+
+### 2. Risk Score & Volatility Assessment
+- **Overall Risk Score**: 65 / 100
+- **Risk Level**: Medium
+- **Volatility**: Medium
+- **AI Confidence**: 78%
+
+### 3. Key Drivers & Risks Identified
+- **➕ Key Drivers (Pros)**:
+  - The trailing EPS of $8.25 indicates a strong profitability trend for Apple Inc.
+  - A market cap of $4.32T suggests a stable, well-established company with deep resources.
+  - A premium P/E of 35.69 is justified by Apple's brand strength and ecosystem.
+- **➖ Key Risks (Cons)**:
+  - The 52-week high of $317.4 is close to the current price, limiting short-term upside.
+  - Legal disputes (like the App Store Ninth Circuit dispute) introduce regulatory friction.
+  - High overall valuation suggests significant expectations are already priced in.
+
+### 4. Recommendation Decision
+- **Action**: `INVEST`
+- **Summary**: Our investment recommendation is based on a comprehensive analysis of Apple Inc.'s financial health, risk profile, and news sentiment. The confidence level of 78% is calculated by weighing financial health at 45% (strong market cap and trailing EPS), risk profile at 35% (medium risk score), and news sentiment at 20% (neutral to slightly positive news). The financials indicate a stable company with a high market cap and reasonable valuation.
+
+---
+
+## 🔮 What you would improve with more time
+
+1. **Multi-Turn Chat History (Agent Memory)**: Implement memory in LangGraph to allow users to ask follow-up questions about the generated report (e.g., *"Why did you think the valuation is high?"* or *"Compare this with Microsoft's P/E"*).
+2. **Deep SEC Document Extraction**: Integrate an agent that pulls the latest 10-K and 10-Q reports directly from the SEC EDGAR API and runs vector search (RAG) to find hidden lease liabilities or executive warnings.
+3. **Advanced Technical Indicators**: Add Moving Averages (EMA/SMA), RSI, and MACD lines to the interactive ApexCharts frontend.
+4. **Export Reports**: Allow users to download the compiled AI Investment Report as a formatted PDF or CSV file.
+
+---
+
+## 🎁 BONUS: LLM Chat Session Transcript/Logs
+
+To give complete insight into our thought process, we have exported our actual pair programming session with the AI.
+
+The full logs can be found in the root directory:
+- [chat_transcript.md](chat_transcript.md): A formatted, readable markdown transcript of all the chat history, agent decisions, and tool executions.
+- Alternatively, you can inspect the local JSONL log files at: `C:\Users\hp\.gemini\antigravity\brain\5f137edc-35f7-4b76-9939-6f7b4601fd5e\.system_generated\logs\transcript.jsonl`
