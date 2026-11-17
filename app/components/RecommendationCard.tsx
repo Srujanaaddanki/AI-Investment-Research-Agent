@@ -91,8 +91,12 @@ export default function RecommendationCard({
           <h4 className="font-semibold text-slate-200 text-sm mb-2 uppercase tracking-wide">
             Analysis Summary
           </h4>
-          <p className="text-slate-300 leading-relaxed text-sm bg-slate-950/20 p-4 rounded-xl border border-slate-800/50">
-            {recommendation.summary}
+          <p className={`leading-relaxed text-sm p-4 rounded-xl border ${
+            recommendation.summary?.includes("Unable to generate") || recommendation.summary?.includes("temporarily unavailable")
+              ? "text-amber-300 bg-amber-950/15 border-amber-800/40"
+              : "text-slate-300 bg-slate-950/20 border-slate-800/50"
+          }`}>
+            {recommendation.summary || "Analysis summary is being generated..."}
           </p>
         </div>
 
@@ -177,7 +181,11 @@ export default function RecommendationCard({
             <h4 className="font-semibold text-blue-400 text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
               <span>🔮</span> Future Outlook
             </h4>
-            <p className="text-slate-300 text-sm leading-relaxed">
+            <p className={`text-sm leading-relaxed ${
+              recommendation.futureOutlook === "No outlook available." || recommendation.futureOutlook?.includes("temporarily unavailable")
+                ? "text-amber-300/80 italic"
+                : "text-slate-300"
+            }`}>
               {recommendation.futureOutlook}
             </p>
           </div>
